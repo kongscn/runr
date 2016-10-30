@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import socket
-import StringIO
+import io
 import contextlib
 import traceback
 import sys
@@ -22,8 +22,8 @@ s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 
 try:
     s.bind((HOST, PORT))
-except socket.error , msg:
-    print 'Bind failed. Error Code : ' + str(msg[0]) + '; Message: ' + msg[1]
+except socket.error as msg:
+    print('Bind failed. Error Code : ' + str(msg[0]) + '; Message: ' + msg[1])
     quit()
 s.listen(10) # Socket now listening
 
@@ -34,7 +34,7 @@ def stdoutIO(stdout=None):
     '''
     old = sys.stdout
     if stdout is None:
-        stdout = StringIO.StringIO()
+        stdout = io.StringIO()
     sys.stdout = stdout
     yield stdout
     sys.stdout = old
@@ -43,23 +43,23 @@ def stdoutIO(stdout=None):
 while 1:
     ### wait to accept a connection
     conn, addr = s.accept() # Connected with  + addr[0] + str(addr[1])
-    input_data = conn.recv(1024000)
+    input_data = conn.recv(1024000).decode('utf-8')
     if re.sub('\s', '', input_data) == 'quit()':
         break
     ### write the codes into a file
-    with open(token_file, 'w') as f:
+    with open(token_file, 'w', encoding='utf-8') as f:
         f.write(input_data)
     ### print codes; execute codes
     with stdoutIO() as output:
-        print input_data
-        print sep
+        print(input_data)
+        print(sep)
         try:
-            execfile(token_file)
+            exec(compile(open(token_file, encoding='utf-8').read(), token_file, 'exec'))
         except:
             traceback.print_exc()
     ### send output
     output_data = output.getvalue()
-    conn.send(output_data)
+    conn.send(output_data.encode('utf-8'))
     conn.close()
 ###### clsoe & quit
 conn.close()

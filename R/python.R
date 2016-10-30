@@ -24,7 +24,7 @@ proc_python <- function(port = 6011){
   exec_code = function(...){
     if (!started) stop('the process has not been started yet')
     code = as.character(c(...))
-    s = socketConnection(port = port, open = 'r+', blocking = TRUE, server = FALSE)
+    s = socketConnection(port = port, open = 'r+', blocking = TRUE, server = FALSE, encoding='UTF-8')
     writeLines(code, s)
     on.exit(close(s))
     split_results(readLines(s), sep)
